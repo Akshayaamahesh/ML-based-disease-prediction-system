@@ -7,13 +7,13 @@
 
 A Flask web application with two diagnostic modules:
 
-1. **Symptom-based disease prediction** — the user selects up to five symptoms; four classifiers
+1. **Symptom-based disease prediction** - the user selects up to five symptoms; four classifiers
    (Decision Tree, Random Forest, Naive Bayes, k-NN) are trained on a binary symptom dataset covering 41 diseases and the
    best-performing model's prediction is returned along with a recommended treatment.
-2. **Chest X-ray pneumonia detection** — the user uploads an X-ray image, which is classified as
+2. **Chest X-ray pneumonia detection** - the user uploads an X-ray image, which is classified as
    *Normal* or *Pneumonia* by a two-layer convolutional neural network written in PyTorch.
 
-> ⚠️ Academic project for learning purposes — not a medical device and not intended for clinical use.
+> ⚠️ Academic project for learning purposes - not a medical device and not intended for clinical use.
 
 ## Architecture
 
@@ -28,7 +28,7 @@ flowchart LR
     P --> U
 ```
 
-**CNN (`model.py`)** — 2 × [Conv 5×5 → BatchNorm → ReLU → MaxPool] → Linear, trained on the
+**CNN (`model.py`)** - 2 × [Conv 5×5 → BatchNorm → ReLU → MaxPool] → Linear, trained on the
 [Kaggle Chest X-Ray Pneumonia](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia) dataset.
 
 ## Quick Start
@@ -70,4 +70,4 @@ Python · Flask · PyTorch / torchvision · scikit-learn · pandas · Pillow · 
 
 ## Contributors
 
-Akshayaa M · Dhanya S · Prathibha G · Sreenithi S — PSG College of Technology
+Akshayaa M · Dhanya S · Prathibha G · Sreenithi S - PSG College of Technology
