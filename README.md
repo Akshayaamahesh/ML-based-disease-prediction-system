@@ -1,50 +1,73 @@
-# ML-Based Disease Prediction and Pneumonia Image Detection System
+# ML-Based Disease Prediction & Pneumonia Detection
 
-**Overview**
-This web application serves as a medical diagnosis tool that predicts potential diseases based on symptoms provided by users. It also includes a feature to analyze X-ray images for pneumonia detection. The application utilizes machine learning models trained on medical datasets to provide accurate predictions.
+![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-000000?style=flat-square&logo=flask&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
 
-**Features**
+A Flask web application with two diagnostic modules:
 
-**Symptom-based Diagnosis:**
-Users can input symptoms, and the application predicts potential diseases using machine learning algorithms.
-The application evaluates multiple models, including Decision Trees, Random Forests, Naive Bayes, and K Nearest Neighbors, to provide the most accurate diagnosis.
-Additionally, the application recommends treatments based on the predicted disease.
+1. **Symptom-based disease prediction** — the user selects up to five symptoms; four classifiers
+   (Decision Tree, Random Forest, Naive Bayes, k-NN) are trained on a binary symptom dataset covering 41 diseases and the
+   best-performing model's prediction is returned along with a recommended treatment.
+2. **Chest X-ray pneumonia detection** — the user uploads an X-ray image, which is classified as
+   *Normal* or *Pneumonia* by a two-layer convolutional neural network written in PyTorch.
 
-**X-ray Image Analysis:**
-Users can upload X-ray images for analysis to detect pneumonia.
-The application employs a Convolutional Neural Network (CNN) model trained on X-ray images to classify them as either showing signs of pneumonia or being normal.
+> ⚠️ Academic project for learning purposes — not a medical device and not intended for clinical use.
 
-**Installation**
+## Architecture
 
-**Clone Repository:**
-git clone https://github.com/Akshayaamahesh/diseaseprediction.git
+```mermaid
+flowchart LR
+    U[Browser] -->|symptoms form| S["/predict_symptoms"]
+    U -->|X-ray upload| X["/predict"]
+    S --> M[DT · RF · NB · k-NN<br/>scikit-learn]
+    M --> T[Treatment lookup<br/>Dataset/treatments.csv]
+    X --> P[Resize 28×28 → ConvNet<br/>PyTorch]
+    T --> U
+    P --> U
+```
 
-**Download Model Files:**
-Download the pre-trained model files for symptom prediction and X-ray analysis.
-Place the model files in the appropriate directories (models/).
+**CNN (`model.py`)** — 2 × [Conv 5×5 → BatchNorm → ReLU → MaxPool] → Linear, trained on the
+[Kaggle Chest X-Ray Pneumonia](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia) dataset.
 
-**Run Application:**
+## Quick Start
+
+```bash
+git clone https://github.com/Akshayaamahesh/ML-based-disease-prediction-system.git
+cd ML-based-disease-prediction-system
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
 python app.py
+```
 
-**Access Application:**
-Open a web browser and go to http://localhost:5000 to access the application.
+Open <http://localhost:5000>. The trained CNN weights (`model_xray_new.ckpt`) are included in the repo.
 
-**Usage**
+### Retraining the X-ray model
 
-**Symptom-based Diagnosis:**
-Enter symptoms on the homepage and submit the form to receive a predicted disease and recommended treatment.
+Download the chest X-ray dataset, update `train_path` / `test_path` in [`main.py`](main.py), then run:
 
-**X-ray Image Analysis:**
-Navigate to the X-ray analysis page.
-Upload an X-ray image using the provided form.
-Submit the form to receive the classification result (normal or pneumonia).
+```bash
+python main.py
+```
 
-**Technologies Used**
-Python: Backend development and machine learning model training.
-Flask: Web framework for building the application.
-PyTorch: Deep learning library used for image analysis.
-scikit-learn: Library for machine learning algorithms and data preprocessing.
-PIL (Python Imaging Library): Used for image processing.
+## Project Structure
 
-**Project done by:**
-Akshayaa M , Dhanya S, Prathibha G , Sreenithi S
+```
+├── app.py               # Flask app: routes for symptom and X-ray prediction
+├── model.py             # ConvNet definition (shared by app and training)
+├── main.py              # CNN training script
+├── model_xray_new.ckpt  # Trained CNN weights
+├── Dataset/             # Symptom training/testing data and treatment mapping
+├── templates/           # Jinja2 HTML templates
+├── static/              # CSS, JS, images
+└── notebooks/           # Exploratory work
+```
+
+## Tech Stack
+
+Python · Flask · PyTorch / torchvision · scikit-learn · pandas · Pillow · HTML / CSS / JavaScript
+
+## Contributors
+
+Akshayaa M · Dhanya S · Prathibha G · Sreenithi S — PSG College of Technology
