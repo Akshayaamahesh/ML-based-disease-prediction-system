@@ -1,37 +1,104 @@
-# ML-Based Disease Prediction & Pneumonia Detection
+<div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-000000?style=flat-square&logo=flask&logoColor=white)
-![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
+# Disease Prediction and Pneumonia Detection
 
-A Flask web application with two diagnostic modules:
+**What might these symptoms point to, and does this X-ray show pneumonia?**
 
-1. **Symptom-based disease prediction** - the user selects up to five symptoms; four classifiers
-   (Decision Tree, Random Forest, Naive Bayes, k-NN) are trained on a binary symptom dataset covering 41 diseases and the
-   best-performing model's prediction is returned along with a recommended treatment.
-2. **Chest X-ray pneumonia detection** - the user uploads an X-ray image, which is classified as
-   *Normal* or *Pneumonia* by a two-layer convolutional neural network written in PyTorch.
+A Flask web app with two diagnostic models. It predicts a likely disease from up to five symptoms with four classical classifiers, and it classifies chest X-rays as Normal or Pneumonia with a convolutional neural network.
 
-> ⚠️ Academic project for learning purposes - not a medical device and not intended for clinical use.
+![Python 3.9+](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Web-Flask-000000?logo=flask&logoColor=white)
+![PyTorch](https://img.shields.io/badge/CNN-PyTorch-EE4C2C?logo=pytorch&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/Classifiers-scikit--learn-F7931E?logo=scikitlearn&logoColor=white)
 
-## Architecture
+[Quick start](#quick-start) · [How it works](#how-a-prediction-is-made) · [Limitations](#limitations)
+
+</div>
+
+![Result page: predicted disease Pneumonia by the Decision Tree, with the treatment recommendation below](docs/images/result.png)
+
+> **Academic project. Not a medical device.** Predictions are for learning purposes only and are
+> not diagnosis or treatment advice.
+
+## Contents
+
+- [What it does](#what-it-does)
+- [See it work](#see-it-work)
+- [How a prediction is made](#how-a-prediction-is-made)
+- [Quick start](#quick-start)
+- [Project structure](#project-structure)
+- [Limitations](#limitations)
+- [Team](#team)
+- [Data credits](#data-credits)
+
+## What it does
+
+The app has two independent modules behind one interface.
+
+**Symptom-based prediction**
+
+1. **Select.** The user picks up to five symptoms from a list of 94.
+2. **Classify.** Decision Tree, Random Forest, Naive Bayes and k-NN are trained on a binary symptom dataset covering 41 diseases.
+3. **Pick a model.** The app reports the prediction of the model that scores best on its check.
+4. **Recommend.** The predicted disease is looked up in `Dataset/treatments.csv` and the treatment guidance is shown.
+
+**Chest X-ray classification**
+
+1. **Upload.** The user uploads a `.jpg`, `.jpeg` or `.png` chest X-ray.
+2. **Preprocess.** The image is converted to RGB and resized to 28 × 28.
+3. **Classify.** A two-layer CNN returns `Normal` or `Pneumonia`.
+
+## See it work
+
+**1. Choose a module.** The home page links to symptom prediction and X-ray classification.
+
+![Home page with navigation to disease prediction and pneumonia prediction](docs/images/home.png)
+
+**2. Submit symptoms.** For example: chest pain, phlegm, mild fever, fast heart rate and rusty sputum.
+
+**3. Read the result.** The app returns the disease, the model it came from and the treatment guidance (shown at the top of this page):
+
+```text
+Models used: Decision Tree, Naive Bayes, K nearest Neighbours, Random Forest
+Predicted Disease: Pneumonia
+Most Accurate Model: Decision Tree
+Treatment Recommendation: Treatment for pneumonia varies based on type, severity, and individual health ...
+```
+
+**4. Or classify an X-ray** from the API directly:
+
+```bash
+curl -F "image=@chest_xray.jpeg" http://localhost:5000/predict
+# {"prediction": "Pneumonia"}
+```
+
+## How a prediction is made
 
 ```mermaid
 flowchart LR
-    U[Browser] -->|symptoms form| S["/predict_symptoms"]
-    U -->|X-ray upload| X["/predict"]
-    S --> M[DT · RF · NB · k-NN<br/>scikit-learn]
+    U[Browser] -->|symptoms form| S["POST /predict_symptoms"]
+    U -->|X-ray upload| X["POST /predict"]
+    S --> M[Decision Tree · Random Forest<br/>Naive Bayes · k-NN]
     M --> T[Treatment lookup<br/>Dataset/treatments.csv]
-    X --> P[Resize 28×28 → ConvNet<br/>PyTorch]
+    X --> P[RGB → 28×28 → ConvNet]
     T --> U
     P --> U
 ```
 
-**CNN (`model.py`)** - 2 × [Conv 5×5 → BatchNorm → ReLU → MaxPool] → Linear, trained on the
-[Kaggle Chest X-Ray Pneumonia](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia) dataset.
+- **Symptoms become a feature vector.** Each of the 94 symptoms is a 0/1 column. Selected symptoms are set to 1.
+- **Four classifiers vote separately.** Each one predicts a disease; the app shows the prediction of the best-scoring model.
+- **The CNN** is 2 × [Conv 5×5, BatchNorm, ReLU, MaxPool 2×2] followed by one linear layer, trained for two epochs with Adam (learning rate 0.001). Weights ship in `model_xray_new.ckpt`.
 
-## Quick Start
+| Route | Method | Returns |
+| --- | --- | --- |
+| `/` | GET | Home page with the symptom form |
+| `/predict_symptoms` | POST | Result page with disease, model and treatment |
+| `/xray` | GET | X-ray upload page |
+| `/predict` | POST | JSON: `{"prediction": "Normal" \| "Pneumonia"}` |
+
+## Quick start
+
+Needs **Python 3.9+** and **git**.
 
 ```bash
 git clone https://github.com/Akshayaamahesh/ML-based-disease-prediction-system.git
@@ -41,33 +108,59 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open <http://localhost:5000>. The trained CNN weights (`model_xray_new.ckpt`) are included in the repo.
+Open <http://localhost:5000>. The trained CNN weights are included, so no download is needed.
 
-### Retraining the X-ray model
+<details>
+<summary>Retraining the X-ray model</summary>
 
-Download the chest X-ray dataset, update `train_path` / `test_path` in [`main.py`](main.py), then run:
+Download the [Kaggle Chest X-Ray Pneumonia](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia) dataset, set `train_path` and `test_path` in [`main.py`](main.py), then run:
 
 ```bash
 python main.py
 ```
 
-## Project Structure
+</details>
+
+## Project structure
 
 ```
-├── app.py               # Flask app: routes for symptom and X-ray prediction
-├── model.py             # ConvNet definition (shared by app and training)
+├── app.py               # Flask app: symptom and X-ray routes
+├── model.py             # ConvNet definition, shared by the app and training
 ├── main.py              # CNN training script
 ├── model_xray_new.ckpt  # Trained CNN weights
-├── Dataset/             # Symptom training/testing data and treatment mapping
+├── Dataset/             # Symptom training and testing data, treatment mapping
 ├── templates/           # Jinja2 HTML templates
-├── static/              # CSS, JS, images
+├── static/              # CSS, JavaScript, images
 └── notebooks/           # Exploratory work
 ```
 
-## Tech Stack
+## Limitations
 
-Python · Flask · PyTorch / torchvision · scikit-learn · pandas · Pillow · HTML / CSS / JavaScript
+<details>
+<summary>Show all limitations</summary>
 
-## Contributors
+- **Not clinically validated.** The symptom dataset and the X-ray model were built for coursework, not tested on clinical data.
+- **Model selection is weak.** The "most accurate model" is chosen by comparing each prediction to a single test row, not by held-out accuracy. A proper version would select the model once, by cross-validation.
+- **Classifiers retrain on every request.** All four models are refit each time the form is submitted. They should be trained once at startup or loaded from disk.
+- **Low-resolution X-rays.** Images are downsampled to 28 × 28, which discards most of the detail a radiologist would use.
+- **Short training.** The CNN was trained for two epochs. No test-set accuracy is reported in this repository.
+- **Subset of symptoms.** The dataset has 132 symptom columns. The app uses 94 of them.
+- **Login and Sign Up** links in the navigation are placeholders.
 
-Akshayaa M · Dhanya S · Prathibha G · Sreenithi S - PSG College of Technology
+</details>
+
+## Team
+
+| Name |
+| --- |
+| Akshayaa M |
+| Dhanya S |
+| Prathibha G |
+| Sreenithi S |
+
+*PSG College of Technology.*
+
+## Data credits
+
+- Chest X-ray images: [Chest X-Ray Images (Pneumonia)](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia), Kermany et al., *Cell* 2018.
+- Libraries: Flask, PyTorch, torchvision, scikit-learn, pandas, Pillow.
